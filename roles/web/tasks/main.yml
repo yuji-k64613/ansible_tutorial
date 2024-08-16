@@ -1,0 +1,5 @@
+---
+- name: test web
+  debug:
+    msg: "{{ item }}"
+  loop: "{{ WEB_MSGS }}"
