@@ -1,9 +1,10 @@
 ---
-- name: test handlers1
-  command: /bin/true
-  notify:
-    - test_handler
-- name: test handlers2
-  command: /bin/true
-  notify:
-    - test_handler
+- name: test ls
+  shell: ls -1 /tmp/sample*.log
+  register: result
+- name: test fetch
+  fetch:
+    src: "{{ item }}"
+    dest: /tmp/result/
+    flat: yes
+  loop: "{{ result.stdout_lines }}"

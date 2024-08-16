@@ -99,6 +99,8 @@ As a result, you can see the following output.
 │     │     ├── tasks
 │     ├── web
 │           ├── tasks
+│           ├── handlers
+│           ├── templates
 │           ├── files
 │           ├── vars
 │           ├── meta
@@ -183,6 +185,8 @@ As a result, you can see the following output.
 │     ├── web
 │           ├── tasks
 │           │     ├── main.yml
+│           ├── handlers
+│           ├── templates
 │           ├── files
 │           ├── vars
 │           ├── meta
@@ -272,6 +276,8 @@ As a result, you can see the following output.
 │     ├── web
 │           ├── tasks
 │           │     ├── main.yml
+│           ├── handlers
+│           ├── templates
 │           ├── files
 │           ├── vars
 │           │     ├── main.yml
@@ -534,3 +540,274 @@ host1                      : ok=5    changed=2    unreachable=0    failed=0    s
 
 * 'test_handler' is executed only once.
 
+## Script Module
+
+### Create Shell Script
+```
+cat << "EOF" > roles/web/files/sample.sh
+#!/bin/bash
+cp -p "$1" "$1.bak"
+EOF
+```
+
+### Revise Playbook
+```
+cat << EOF > roles/web/tasks/main.yml
+---
+- name: test script
+  script: sample.sh sample.conf
+  args:
+    chdir: /tmp
+EOF
+```
+
+### Execute
+```
+ansible-playbook -i inventory.yml site.yml
+```
+
+### Result
+```
+PLAY [webservers] **************************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [host1]
+
+TASK [common : test common] ****************************************************
+ok: [host1] => {
+    "msg": "hello, common!"
+}
+
+TASK [web : test script] *******************************************************
+changed: [host1]
+
+PLAY RECAP *********************************************************************
+host1                      : ok=3    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+```
+
+### Confirm the result of 'sample.sh'
+```
+ls -lt /tmp
+```
+
+```
+-rw-r--r-- 1 root    root     24 Aug 16 07:37 sample.conf
+-rw-r--r-- 1 root    root     24 Aug 16 07:37 sample.conf.bak
+```
+
+## Shell Module
+
+### Create Dummy Logs
+```
+touch /tmp/sample1_$(date +'%Y%m%d').log
+touch /tmp/sample2_$(date +'%Y%m%d').log
+```
+
+### Revise Playbook
+```
+cat << "EOF" > roles/web/tasks/main.yml
+---
+- name: test ls
+  shell: ls -1 /tmp/sample*.log
+  register: result
+- name: echo result
+  debug:
+    msg: "{{ result.stdout_lines }}"
+EOF
+```
+
+### Execute
+```
+ansible-playbook -i inventory.yml site.yml
+```
+
+### Result
+```
+PLAY [webservers] **************************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [host1]
+
+TASK [common : test common] ****************************************************
+ok: [host1] => {
+    "msg": "hello, common!"
+}
+
+TASK [web : test ls] ***********************************************************
+changed: [host1]
+
+TASK [web : echo result] *******************************************************
+ok: [host1] => {
+    "msg": [
+        "/tmp/sample1_20240816.log",
+        "/tmp/sample2_20240816.log"
+    ]
+}
+
+PLAY RECAP *********************************************************************
+host1                      : ok=4    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+```
+
+## Fetch Module
+
+### Revise Playbook
+```
+cat << "EOF" > roles/web/tasks/main.yml
+---
+- name: test ls
+  shell: ls -1 /tmp/sample*.log
+  register: result
+- name: test fetch
+  fetch:
+    src: "{{ item }}"
+    dest: /tmp/result/
+    flat: yes
+  loop: "{{ result.stdout_lines }}"
+EOF
+```
+
+### Execute
+```
+ansible-playbook -i inventory.yml site.yml
+```
+
+### Result
+```
+PLAY [webservers] **************************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [host1]
+
+TASK [common : test common] ****************************************************
+ok: [host1] => {
+    "msg": "hello, common!"
+}
+
+TASK [web : test ls] ***********************************************************
+changed: [host1]
+
+TASK [web : test fetch] ********************************************************
+changed: [host1] => (item=/tmp/sample1_20240816.log)
+changed: [host1] => (item=/tmp/sample2_20240816.log)
+
+PLAY RECAP *********************************************************************
+host1                      : ok=4    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+```
+
+```
+ls -lt /tmp/result
+```
+
+```
+-rw-rw-r-- 1 vagrant vagrant 0 Aug 16 08:25 sample2_20240816.log
+-rw-rw-r-- 1 vagrant vagrant 0 Aug 16 08:25 sample1_20240816.log
+```
+
+## Encrypt Root Password
+
+### Create Password File
+```
+cat << EOF > extra_vars.yml
+---
+PASSWORD: vagrant
+EOF
+```
+
+### Encrypt Password File
+```
+ansible-vault encrypt extra_vars.yml
+```
+
+```
+New Vault password: 
+Confirm New Vault password: 
+Encryption successful
+```
+
+* Input 'test' twwice.
+
+### Revise Inventory
+```
+cat << EOF > inventory.yml
+---
+all:
+  vars:
+    ansible_user: root
+  children:
+    webservers:
+      hosts:
+        host1:
+          ansible_host: 127.0.0.1
+          ansible_password: "{{ PASSWORD }}"
+EOF
+```
+
+### Execute
+```
+ansible-playbook -i inventory.yml site.yml --extra-vars @extra_vars.yml
+```
+
+### Result(Failed)
+```
+ERROR! Attempting to decrypt but no vault secrets found
+```
+
+### Execute
+```
+echo test > password.txt
+```
+```
+ansible-playbook -i inventory.yml site.yml --extra-vars @extra_vars.yml --vault-password-file password.txt
+```
+
+### Result
+```
+TASK [Gathering Facts] *********************************************************
+ok: [host1]
+
+TASK [common : test common] ****************************************************
+ok: [host1] => {
+    "msg": "hello, common!"
+}
+
+TASK [web : test ls] ***********************************************************
+changed: [host1]
+
+TASK [web : test fetch] ********************************************************
+ok: [host1] => (item=/tmp/sample1_20240816.log)
+ok: [host1] => (item=/tmp/sample2_20240816.log)
+
+PLAY RECAP *********************************************************************
+host1                      : ok=4    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+```
+
+## Directories
+As a result, you can see the following output.
+
+```
+.
+├── group_vars
+│     ├── all.yml
+├── host_vars
+├── roles
+│     ├── common
+│     │     ├── tasks
+│     │           ├── main.yml
+│     ├── web
+│           ├── tasks
+│           │     ├── main.yml
+│           ├── handlers
+│           │     ├── main.yml
+│           ├── templates
+│           │     ├── sample.conf.j2
+│           ├── files
+│           │     ├── sample.sh
+│           ├── vars
+│           │     ├── main.yml
+│           ├── meta
+│           │     ├── main.yml
+├── webservers.yml
+├── site.yml
+├── inventory.yml
+├── extra_vars.yml
+```
