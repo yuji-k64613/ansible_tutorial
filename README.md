@@ -724,7 +724,7 @@ Confirm New Vault password:
 Encryption successful
 ```
 
-* Input 'test' twwice.
+* Input 'test' twice.
 
 ### Revise Inventory
 ```
