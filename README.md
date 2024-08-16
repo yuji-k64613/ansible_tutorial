@@ -1,7 +1,7 @@
 # Ansible Tutorial
 This step-by-step tutorial will give you a basic understanding of how to use Ansible following [Best Practices](https://docs.ansible.com/ansible/2.8/user_guide/playbooks_best_practices.html#directory-layout).
 
-To keep the tutorial simple and easy to follow, it demonstrates how to manage the local host(127.0.0.1) as the target with Shellsible, rather than a remote host.
+To keep the tutorial simple and easy to follow, it demonstrates how to manage the local host(127.0.0.1) as the target, rather than a remote host.
 
 ## Install Ansible(Example)
 
@@ -30,7 +30,7 @@ ssh root@127.0.0.1
 
 ## Playbook(minimum)
 
-### Make Palybook
+### Create Palybook
 ```
 cat << "EOF" > playbook.yml
 ---
@@ -75,7 +75,7 @@ PLAY RECAP *********************************************************************
 
 ## Playbook(Best Practices)
 
-### Make Directories
+### Create Directories
 ```
 mkdir group_vars
 mkdir host_vars
@@ -109,7 +109,7 @@ As a result, you can see the following output.
 ```
 
 
-### Make Common Role
+### Create Common Role
 ```
 cat << EOF > roles/common/tasks/main.yml
 ---
@@ -123,7 +123,7 @@ EOF
 * You can define multiple modules inside 'main.yml'.
 * '---' indicates that this file is written in YAML format.
 
-### Make Web Role
+### Create Web Role
 ```
 cat << EOF > roles/web/tasks/main.yml
 ---
@@ -133,7 +133,7 @@ cat << EOF > roles/web/tasks/main.yml
 EOF
 ```
 
-### Make 'webservers.yml'
+### Create 'webservers.yml'
 ```
 cat << EOF > webservers.yml
 ---
@@ -146,7 +146,7 @@ EOF
 
 - 'webservers.yml' is defined to have Ansible execute the common and web roles.
 
-### Make 'site.yml'
+### Create 'site.yml'
 ```
 cat << EOF > site.yml
 ---
@@ -155,7 +155,7 @@ EOF
 ```
 - 'site.yml' is the top-level configuration file.
 
-### Make Inventory
+### Create Inventory
 ```
 cat << EOF > inventory.yml
 ---
@@ -226,7 +226,7 @@ host1                      : ok=3    changed=0    unreachable=0    failed=0    s
 
 ## Variables
 
-### define Variables
+### Define Variables
 ```
 cat << EOF > group_vars/all.yml
 ---
@@ -245,7 +245,7 @@ EOF
 
 * 'web' role can refer to the variables defined in 'roles/web/vars/main.yml'.
 
-### Revise Playbook
+### Revise Task
 ```
 cat << EOF > roles/common/tasks/main.yml
 ---
@@ -318,7 +318,7 @@ host1                      : ok=3    changed=0    unreachable=0    failed=0    s
 
 ## Loops
 
-### define Variables
+### Define Variables(List)
 ```
 cat << EOF > roles/web/vars/main.yml
 ---
@@ -330,7 +330,7 @@ EOF
 
 * define a list.
 
-### Revise Playbook
+### Revise Task
 ```
 cat << EOF > roles/web/tasks/main.yml
 ---
@@ -383,7 +383,7 @@ Template
 EOF
 ```
 
-### Revise Playbook
+### Revise Task
 ```
 cat << EOF > roles/web/tasks/main.yml
 ---
@@ -492,7 +492,7 @@ cat << EOF > roles/web/handlers/main.yml
 EOF
 ```
 
-### Revise Playbook
+### Revise Task
 ```
 cat << EOF > roles/web/tasks/main.yml
 ---
@@ -555,7 +555,7 @@ EOF
 
 * The script creates a backup file based on the provided argument.
 
-### Revise Playbook
+### Revise Task
 ```
 cat << EOF > roles/web/tasks/main.yml
 ---
@@ -608,7 +608,7 @@ touch /tmp/sample1_$(date +'%Y%m%d').log
 touch /tmp/sample2_$(date +'%Y%m%d').log
 ```
 
-### Revise Playbook
+### Revise Task
 ```
 cat << "EOF" > roles/web/tasks/main.yml
 ---
@@ -657,7 +657,7 @@ host1                      : ok=4    changed=1    unreachable=0    failed=0    s
 
 ## Fetch Module
 
-### Revise Playbook
+### Revise Task
 ```
 cat << "EOF" > roles/web/tasks/main.yml
 ---
@@ -836,3 +836,7 @@ As a result, you can see the following output.
 ├── inventory.yml
 ├── extra_vars.yml
 ```
+
+## Author
+
+Created by Yuji Konishi.
