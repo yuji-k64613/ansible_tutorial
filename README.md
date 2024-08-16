@@ -48,6 +48,8 @@ cat << "EOF" > playbook.yml
 EOF
 ```
 
+* You should change the values of variables according to your environment.
+
 ### Execute
 ```
 ansible-playbook playbook.yml
@@ -168,8 +170,9 @@ all:
           ansible_password: vagrant
 EOF
 ```
-- The host, user, and password are defined.
-- The host(host1) belonging to 'webservers' is defined.
+* The host, user, and password are defined.
+* The host(host1) belonging to 'webservers' is defined.
+* You should change the values of variables according to your environment.
 
 ### Directories
 As a result, you can see the following output.
@@ -550,6 +553,8 @@ cp -p "$1" "$1.bak"
 EOF
 ```
 
+* The script creates a backup file based on the provided argument.
+
 ### Revise Playbook
 ```
 cat << EOF > roles/web/tasks/main.yml
@@ -615,6 +620,8 @@ cat << "EOF" > roles/web/tasks/main.yml
     msg: "{{ result.stdout_lines }}"
 EOF
 ```
+
+* The result of 'shell' module is stored in a variable called 'result'.
 
 ### Execute
 ```
@@ -713,6 +720,8 @@ PASSWORD: vagrant
 EOF
 ```
 
+* You should change the values of variables according to your environment.
+
 ### Encrypt Password File
 ```
 ansible-vault encrypt extra_vars.yml
@@ -725,6 +734,20 @@ Encryption successful
 ```
 
 * Input 'test' twice.
+
+### Confirm Password File
+```
+cat extra_vars.yml
+```
+
+```
+$ANSIBLE_VAULT;1.1;AES256
+35316539666439313466393366386638323065633165666262363962346135633230383262313234
+6531376663393737383834373635326433333230393935360a633536313165336662613737303665
+37646436633266613630353631653763663938353134333036373664393661333766663938616631
+3563303462383730360a626433356339653830353332333839386634623164356133303435333938
+33663561633638396563633134633864633239623937666662373933626465666136
+```
 
 ### Revise Inventory
 ```
@@ -751,6 +774,8 @@ ansible-playbook -i inventory.yml site.yml --extra-vars @extra_vars.yml
 ```
 ERROR! Attempting to decrypt but no vault secrets found
 ```
+
+* You need the password that was used when you encrypted the password file.
 
 ### Execute
 ```
