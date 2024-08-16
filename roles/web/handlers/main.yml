@@ -1,0 +1,6 @@
+---
+- name: test handler
+  debug:
+    msg: "test handler executed"
+  listen:
+    - test_handler

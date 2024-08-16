@@ -363,3 +363,174 @@ PLAY RECAP *********************************************************************
 host1                      : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0  
 ```
 
+## Template
+
+### Create Template Fle
+
+```
+cat << EOF > roles/web/templates/sample.conf.j2
+Template
+{{ WEB_MSGS }}
+EOF
+```
+
+### Revise Playbook
+```
+cat << EOF > roles/web/tasks/main.yml
+---
+- name: test template
+  template:
+    src: sample.conf.j2
+    dest: /tmp/sample.conf
+EOF
+```
+
+### Execute
+```
+ansible-playbook -i inventory.yml site.yml
+```
+
+### Result
+```
+PLAY [webservers] **************************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [host1]
+
+TASK [common : test common] ****************************************************
+ok: [host1] => {
+    "msg": "hello, common!"
+}
+
+TASK [web : test template] *****************************************************
+changed: [host1]
+
+PLAY RECAP *********************************************************************
+host1                      : ok=3    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+```
+
+### Confirm Template Fle
+```
+cat /tmp/sample.conf
+```
+
+```
+Template
+['one', 'two']
+```
+
+## Meta
+
+### Define Dependencies.
+```
+cat << EOF > roles/web/meta/main.yml
+---
+dependencies:
+  - common
+EOF
+```
+
+* 'web' role depends on 'common' role.
+
+### Revise 'webservers.yml'
+```
+cat << EOF > webservers.yml
+---
+- hosts: webservers
+  roles:
+    - web
+EOF
+```
+* delete 'common'.
+
+### Execute
+```
+ansible-playbook -i inventory.yml site.yml
+```
+
+### Result
+```
+PLAY [webservers] **************************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [host1]
+
+TASK [common : test common] ****************************************************
+ok: [host1] => {
+    "msg": "hello, common!"
+}
+
+TASK [web : test template] *****************************************************
+ok: [host1]
+
+PLAY RECAP *********************************************************************
+host1                      : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+```
+
+* 'common' role is also executed.
+
+## Handler
+
+### Create Handler
+```
+cat << EOF > roles/web/handlers/main.yml
+---
+- name: test handler
+  debug:
+    msg: "test handler executed"
+  listen:
+    - test_handler
+EOF
+```
+
+### Revise Playbook
+```
+cat << EOF > roles/web/tasks/main.yml
+---
+- name: test handlers1
+  command: /bin/true
+  notify:
+    - test_handler
+- name: test handlers2
+  command: /bin/true
+  notify:
+    - test_handler
+EOF
+```
+
+* Notify 'test_handler' twice.
+
+### Execute
+```
+ansible-playbook -i inventory.yml site.yml
+```
+
+### Result
+```
+PLAY [webservers] **************************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [host1]
+
+TASK [common : test common] ****************************************************
+ok: [host1] => {
+    "msg": "hello, common!"
+}
+
+TASK [web : test handlers1] ****************************************************
+changed: [host1]
+
+TASK [web : test handlers2] ****************************************************
+changed: [host1]
+
+RUNNING HANDLER [web : test handler] *******************************************
+ok: [host1] => {
+    "msg": "test handler executed"
+}
+
+PLAY RECAP *********************************************************************
+host1                      : ok=5    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+```
+
+* 'test_handler' is executed only once.
+
